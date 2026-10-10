@@ -2079,15 +2079,6 @@ textarea.field__input { resize: vertical; min-height: 92px; }
   color: rgba(150, 170, 202, 0.82);
 }
 
-.music-hint__link {
-  margin-left: 6px;
-  color: var(--pink-2);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.music-hint__link:hover { color: #FFD3E8; }
-
 .noscript {
   position: fixed;
   left: 0;
