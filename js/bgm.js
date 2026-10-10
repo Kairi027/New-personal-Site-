@@ -28,10 +28,20 @@
   var hint = document.getElementById('musicHint');
   var hintText = hint ? hint.querySelector('.music-hint__text') : null;
   var hintSub = hint ? hint.querySelector('.music-hint__sub') : null;
+  /* 副标题里可能嵌着一个下载链接（在线版启动器），改文案时要动内层 span，
+     否则 textContent 会把链接一起冲掉。 */
+  var hintSubText = document.getElementById('musicHintSub') || hintSub;
+  var hintLink = document.getElementById('musicHintLink');
 
   var STORE_KEY = 'kairi_bgm';
   var TARGET_VOLUME = 0.55;
-  var LAUNCHER_TIP = '想刷新后也免点击？用「启动博客-自动播放.bat」打开本站';
+  /* 在线版（http/https，比如 GitHub Pages）没有本地那个 bat，
+     改成让访客下载「在线版启动器」：它用带自动播放参数的浏览器打开本站。 */
+  var ONLINE = /^https?:$/i.test(window.location.protocol);
+  var ONLINE_LAUNCHER = '启动博客-自动播放-在线版.bat';
+  var LAUNCHER_TIP = ONLINE
+    ? '想刷新后也免点击？下载「' + ONLINE_LAUNCHER + '」用它打开本站'
+    : '想刷新后也免点击？用「启动博客-自动播放.bat」打开本站';
 
   var userPaused = false;          // 用户在这一份文档里主动按过暂停
   var audible = false;             // 真的在出声（不是"play() 没报错"）
@@ -99,7 +109,7 @@
   function showHint(delay, text, sub) {
     if (!hint) return;
     if (text && hintText) hintText.textContent = text;
-    if (hintSub) hintSub.textContent = sub || LAUNCHER_TIP;
+    if (hintSubText) hintSubText.textContent = sub || LAUNCHER_TIP;
     window.clearTimeout(hintTimer);
     hintTimer = window.setTimeout(function () {
       hint.classList.add('is-show');
@@ -183,7 +193,10 @@
     audio.muted = true;      // 静音态浏览器不拦，也不会留下"看着在放其实没声"
 
     if (policyBlocked) {
-      showHint(300, '点一下这里，音乐就会响起', LAUNCHER_TIP);
+      /* 登录卡片还挡在前面时先不弹提示：那一下「进入」就会把音乐带起来。
+         （在线版被拦时也走这里，正常弹提示 + 下载链接） */
+      if (loginGateIsUp()) hideHint();
+      else showHint(300, '点一下这里，音乐就会响起', LAUNCHER_TIP);
     } else {
       showHint(0, '音乐加载失败：' + (err.message || name), '请确认 music/Home BGM.m4a 存在且格式可用');
     }
@@ -353,18 +366,22 @@
   syncUI();
   startWatchdog();
 
-  if (loginGateIsUp()) {
-    /* 登录界面固定不播音乐：这段不绑"首次手势"，也不试自动播放。
-       等登录成功（kairi:authed）那一下再直接带声播放。 */
-  } else {
-    bindGesture();
-    /* 立刻试一次：带自动播放参数的浏览器 / 已达到媒体参与度的站点会直接成功。
-       再补一次短延迟重试，覆盖"权限/解码晚一步就绪"的情况。 */
-    tryPlay();
-    window.setTimeout(function () {
-      if (userPaused || isAudible()) return;
-      if (loginGateIsUp()) return;      // 等登录后那一下点击（kairi:authed）再播
-      tryPlay();
-    }, 420);
+  /* 在线版把「下载在线版启动器」这个链接亮出来（本地版保持原样：文件就在旁边） */
+  if (ONLINE && hintLink) {
+    hintLink.href = ONLINE_LAUNCHER;
+    hintLink.hidden = false;
   }
+
+  bindGesture();
+  /* 立刻试一次。两种情况会直接成功：
+       · 用的是带 --autoplay-policy=no-user-gesture-required 的浏览器
+         （本地「启动博客-自动播放.bat」/ 在线版启动器都是这么开的）；
+       · 这个站点已经攒够媒体参与度（Chrome 的 MEI）而被放行。
+     登录卡片挡着时也照样试：放不出来就只留一个静音的 <audio>，
+     等用户点「进入」（kairi:authed）或任意点击时再接上。 */
+  tryPlay();
+  window.setTimeout(function () {
+    if (userPaused || isAudible()) return;
+    tryPlay();
+  }, 420);
 })();
