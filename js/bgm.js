@@ -33,6 +33,21 @@
   var TARGET_VOLUME = 0.55;
   var LAUNCHER_TIP = '想刷新后也免点击？用「启动博客-自动播放.bat」打开本站';
 
+  /* 线上音乐换更快的源。GitHub Pages 的 CDN 在国内实测只有 40 KB/s 左右，
+     music/Home BGM.m4a 有 4.4MB，要一两分钟才下得完，听感就是"进去没有音乐"；
+     同一个仓库走 jsDelivr 实测 21s 下完（快 5 倍左右）。
+     本机（file:// 与 127.0.0.1）依旧直接读本地文件，不走网络。 */
+  var CDN_AUDIO = 'https://cdn.jsdelivr.net/gh/Kairi027/New-personal-Site-@gh-pages/music/Home%20BGM.m4a';
+  var LOCAL_AUDIO = audio.getAttribute('src');
+
+  function preferFastSource() {
+    if (!/^https?:$/i.test(window.location.protocol)) return;
+    if (/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(window.location.hostname)) return;
+    if (!LOCAL_AUDIO || audio.getAttribute('src') === CDN_AUDIO) return;
+    audio.setAttribute('src', CDN_AUDIO);
+    audio.load();
+  }
+
   var userPaused = false;          // 用户在这一份文档里主动按过暂停
   var audible = false;             // 真的在出声（不是"play() 没报错"）
   var playedOnce = false;          // 这一份文档里成功出声过
@@ -305,6 +320,13 @@
   });
   audio.addEventListener('volumechange', function () { syncUI(); });
   audio.addEventListener('error', function () {
+    /* CDN 抽风时先退回同源文件，只有两边都不行才算真失败 */
+    if (audio.getAttribute('src') === CDN_AUDIO && LOCAL_AUDIO) {
+      audio.setAttribute('src', LOCAL_AUDIO);
+      audio.load();
+      if (!userPaused) tryPlay();
+      return;
+    }
     var detail = audio.error ? ('code ' + audio.error.code) : '';
     showHint(0, '音乐加载失败（' + detail + '）', '请确认 music/Home BGM.m4a 存在且格式可用');
   });
@@ -363,6 +385,7 @@
      登录卡片还挡着时也照试：放不出来只留一个静音的 <audio>，不会报错、
      不会抢先出声；能放就直接播，根本不用等登录。 */
   bindGesture();
+  preferFastSource();
   tryPlay();
   window.setTimeout(function () {
     if (userPaused || isAudible()) return;
