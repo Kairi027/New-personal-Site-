@@ -33,19 +33,81 @@
   var TARGET_VOLUME = 0.55;
   var LAUNCHER_TIP = '想刷新后也免点击？用「启动博客-自动播放.bat」打开本站';
 
-  /* 线上音乐换更快的源。GitHub Pages 的 CDN 在国内实测只有 40 KB/s 左右，
-     music/Home BGM.m4a 有 4.4MB，要一两分钟才下得完，听感就是"进去没有音乐"；
-     同一个仓库走 jsDelivr 实测 21s 下完（快 5 倍左右）。
-     本机（file:// 与 127.0.0.1）依旧直接读本地文件，不走网络。 */
-  var CDN_AUDIO = 'https://cdn.jsdelivr.net/gh/Kairi027/New-personal-Site-@gh-pages/music/Home%20BGM.m4a';
-  var LOCAL_AUDIO = audio.getAttribute('src');
+  /* ── 线上音源 ────────────────────────────────────────────────────────
+     GitHub Pages 的 CDN 在国内实测只有 40 KB/s 上下，而原来那份音乐是
+     4.2MB / 258kbps，这条通道喂不动它，于是"有的时候加载失败"。
+     现在音乐已压成 ~1.3MB / 80kbps 单声道，40 KB/s 也够它连续播放；
+     线上仍然优先走更快的 jsDelivr（实测 200 KB/s 上下），顺序是：
+        jsDelivr cdn 节点 → jsDelivr gcore 节点 → 同源文件
+     哪条先能用就用哪条，用成功的会被记住，下次先试它；某条十几秒还取不到
+     数据就自动换下一条；全都失败才提示音乐加载失败。
+     本机（file:// 与 127.0.0.1）直接读本地文件，不走网络。
+     这里固定 commit SHA 是有意的：@分支 的 jsDelivr 缓存会滞后，偶尔还会
+     解析失败；以后换掉 music/Home BGM.m4a，把 MUSIC_PIN 改成新的提交号即可。 */
+  var MUSIC_PIN = '24a88afa9b69b803d43f671ce9b803147f5be818';
+  var MUSIC_PATH = '/music/Home%20BGM.m4a';
+  var LOCAL_AUDIO = audio.getAttribute('src') || '';
+  var SOURCE_KEY = 'kairi_bgm_src';
 
-  function preferFastSource() {
-    if (!/^https?:$/i.test(window.location.protocol)) return;
-    if (/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(window.location.hostname)) return;
-    if (!LOCAL_AUDIO || audio.getAttribute('src') === CDN_AUDIO) return;
-    audio.setAttribute('src', CDN_AUDIO);
-    audio.load();
+  var sources = (function () {
+    var list = [];
+    var remote = /^https?:$/i.test(window.location.protocol) &&
+      !/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(window.location.hostname);
+    if (remote) {
+      list.push('https://cdn.jsdelivr.net/gh/Kairi027/New-personal-Site-@' + MUSIC_PIN + MUSIC_PATH);
+      list.push('https://gcore.jsdelivr.net/gh/Kairi027/New-personal-Site-@' + MUSIC_PIN + MUSIC_PATH);
+    }
+    if (LOCAL_AUDIO) list.push(LOCAL_AUDIO);
+    return list;
+  })();
+
+  var sourceIndex = 0;
+  var sourceTimer = 0;
+
+  function rememberSource(url) {
+    try { window.localStorage.setItem(SOURCE_KEY, url); } catch (err) { /* 忽略：无痕模式等 */ }
+  }
+
+  function startSourceIndex() {
+    try {
+      var index = sources.indexOf(window.localStorage.getItem(SOURCE_KEY));
+      if (index >= 0) return index;
+    } catch (err) { /* 忽略 */ }
+    return 0;
+  }
+
+  function applySource(index, resumeAt) {
+    window.clearTimeout(sourceTimer);
+    if (index < 0 || index >= sources.length) return;
+    sourceIndex = index;
+    if (audio.getAttribute('src') !== sources[index]) {
+      audio.setAttribute('src', sources[index]);
+      if (resumeAt) {
+        /* 换源等于从头加载，把播放位置挪回去，别让音乐莫名重头开始 */
+        var seek = function () {
+          audio.removeEventListener('loadedmetadata', seek);
+          try { audio.currentTime = resumeAt; } catch (err) { /* 忽略 */ }
+        };
+        audio.addEventListener('loadedmetadata', seek);
+      }
+      audio.load();
+    }
+    /* 这条源十几秒还没取到数据（被墙 / 卡住）就换下一条，别一直干等 */
+    sourceTimer = window.setTimeout(function () {
+      if (audio.readyState >= 2 || isAudible()) return;
+      nextSource();
+    }, 12000);
+  }
+
+  function nextSource() {
+    if (sourceIndex + 1 >= sources.length) return false;
+    applySource(sourceIndex + 1, audio.currentTime);
+    if (!userPaused) tryPlay();
+    return true;
+  }
+
+  function setupSources() {
+    if (sources.length > 1) applySource(startSourceIndex());
   }
 
   var userPaused = false;          // 用户在这一份文档里主动按过暂停
@@ -138,6 +200,7 @@
       audible = true;
       playedOnce = true;
       recoveryTries = 0;
+      if (sources[sourceIndex]) rememberSource(sources[sourceIndex]);
       hideHint();
       unbindGesture();
     }
@@ -324,13 +387,8 @@
   });
   audio.addEventListener('volumechange', function () { syncUI(); });
   audio.addEventListener('error', function () {
-    /* CDN 抽风时先退回同源文件，只有两边都不行才算真失败 */
-    if (audio.getAttribute('src') === CDN_AUDIO && LOCAL_AUDIO) {
-      audio.setAttribute('src', LOCAL_AUDIO);
-      audio.load();
-      if (!userPaused) tryPlay();
-      return;
-    }
+    /* 这条源不行就换下一条（jsDelivr 两个节点 → 同源文件），全都失败才算真失败 */
+    if (nextSource()) return;
     var detail = audio.error ? ('code ' + audio.error.code) : '';
     showHint(0, '音乐加载失败（' + detail + '）', '请确认 music/Home BGM.m4a 存在且格式可用');
   });
@@ -388,7 +446,7 @@
        · 用户点「进入」那一下（kairi:authed）之后，音乐紧接着带声播起来。
      登录卡片还挡着的时候不播（tryPlay 里统一拦着），卡片一撤就走上面两条。 */
   bindGesture();
-  preferFastSource();
+  setupSources();
   tryPlay();
   window.setTimeout(function () {
     if (userPaused || isAudible()) return;
