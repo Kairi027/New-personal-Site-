@@ -183,7 +183,10 @@
     audio.muted = true;      // 静音态浏览器不拦，也不会留下"看着在放其实没声"
 
     if (policyBlocked) {
-      showHint(300, '点一下这里，音乐就会响起', LAUNCHER_TIP);
+      /* 登录卡片还挡着时先别弹提示：那一下「进入」本身就是浏览器认的
+         用户点击，音乐紧接着就会响，用不着再找地方点。 */
+      if (loginGateIsUp()) hideHint();
+      else showHint(300, '点一下这里，音乐就会响起', LAUNCHER_TIP);
     } else {
       showHint(0, '音乐加载失败：' + (err.message || name), '请确认 music/Home BGM.m4a 存在且格式可用');
     }
@@ -353,18 +356,16 @@
   syncUI();
   startWatchdog();
 
-  if (loginGateIsUp()) {
-    /* 登录界面固定不播音乐：这段不绑"首次手势"，也不试自动播放。
-       等登录成功（kairi:authed）那一下再直接带声播放。 */
-  } else {
-    bindGesture();
-    /* 立刻试一次：带自动播放参数的浏览器 / 已达到媒体参与度的站点会直接成功。
-       再补一次短延迟重试，覆盖"权限/解码晚一步就绪"的情况。 */
+  /* 一进主界面就播，不等任何点击：下面这种情形能直接成功——
+       · 浏览器本身就允许出声音（用「启动博客-自动播放.bat」打开，
+         或这个站点在 Chrome 里已经攒够媒体参与度 MEI）；
+       · 用户点「进入」那一下之后（kairi:authed），音乐紧接着带声播起来。
+     登录卡片还挡着时也照试：放不出来只留一个静音的 <audio>，不会报错、
+     不会抢先出声；能放就直接播，根本不用等登录。 */
+  bindGesture();
+  tryPlay();
+  window.setTimeout(function () {
+    if (userPaused || isAudible()) return;
     tryPlay();
-    window.setTimeout(function () {
-      if (userPaused || isAudible()) return;
-      if (loginGateIsUp()) return;      // 等登录后那一下点击（kairi:authed）再播
-      tryPlay();
-    }, 420);
-  }
+  }, 420);
 })();
