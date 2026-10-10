@@ -1,0 +1,8 @@
+2026-10-10 00:26:09.375 Failed to scan component manifests: 'NoneType' object has no attribute 'lower'
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8793
+  Network URL: http://192.168.1.4:8793
+  External URL: http://117.183.220.36:8793
+

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0F1525" />
+<meta name="color-scheme" content="dark" />
+<title>项目管理 · Kairi 的小站</title>
+<meta name="description" content="Kairi 的小站 —— 开发者项目管理。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230F1525'/%3E%3Cellipse cx='16' cy='9' rx='7' ry='2.6' fill='none' stroke='%23FF4DA6' stroke-width='2'/%3E%3Ccircle cx='16' cy='18' r='5' fill='none' stroke='%23DCE1EC' stroke-width='2'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap" />
+<link rel="stylesheet" href="css/style.css" />
+<script src="js/auth.js"></script>
+<script>
+  /* 访客不允许进这一页，尽早弹走，避免闪一下 */
+  if (window.KairiAuth.canEdit && !window.KairiAuth.canEdit()) {
+    window.location.replace('projects.html');
+  }
+</script>
+</head>
+<body data-page="project-edit">
+
+<div data-site-nav></div>
+
+<main class="page">
+  <div class="page-glow" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="page-back reveal">
+      <a class="link-back" href="projects.html">← 项目汇集</a>
+    </div>
+
+    <header class="page-head reveal">
+      <p class="section__kicker">MANAGE</p>
+      <h1 class="page-head__title" id="editTitle">新建项目</h1>
+      <p class="page-head__lead">
+        上传项目文件后会自动解析出技术栈、简介、亮点和截图；解析只是草稿，你随时可以手改。
+      </p>
+      <p class="page-head__lead">
+        保存时会自动用无头浏览器打开仓库里的 <code>index.html</code> 截一张图当封面（和内置项目一样）。
+      </p>
+    </header>
+
+    <div class="notice" id="storageBar" hidden></div>
+
+    <div class="editor">
+      <section class="editor__main">
+        <div class="form">
+          <div class="field-row">
+            <label class="field">
+              <span class="field__label">项目名称 <em>必填</em></span>
+              <input class="field__input" id="fieldName" type="text" placeholder="例如：天气小工具" />
+            </label>
+            <label class="field">
+              <span class="field__label">英文名（可选）</span>
+              <input class="field__input" id="fieldEn" type="text" placeholder="Weather Widget" />
+            </label>
+          </div>
+
+          <div class="field-row">
+            <label class="field">
+              <span class="field__label">副标题</span>
+              <input class="field__input" id="fieldSubtitle" type="text" placeholder="一句话说明它是什么" />
+            </label>
+            <label class="field">
+              <span class="field__label">年份</span>
+              <input class="field__input" id="fieldYear" type="text" placeholder="2026" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="field__label">一句话简介</span>
+            <textarea class="field__input" id="fieldTagline" rows="2" placeholder="会显示在项目卡片上"></textarea>
+          </label>
+
+          <div class="field-row">
+            <label class="field">
+              <span class="field__label">技术栈（逗号分隔）</span>
+              <input class="field__input" id="fieldTech" type="text" placeholder="JavaScript, Canvas" />
+            </label>
+            <label class="field">
+              <span class="field__label">项目 ID</span>
+              <input class="field__input" id="fieldId" type="text" readonly />
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="field__label">亮点（每行一条）</span>
+            <textarea class="field__input" id="fieldHighlights" rows="4" placeholder="一行写一条亮点"></textarea>
+          </label>
+
+          <label class="field">
+            <span class="field__label">详情（每行一段）</span>
+            <textarea class="field__input" id="fieldDetail" rows="6" placeholder="每行写一段项目介绍"></textarea>
+          </label>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__legend">运行方式（决定预览图怎么截）</legend>
+            <p class="field__hint">
+              留空就直接截仓库里的 <code>index.html</code>；
+              填了启动命令，就会先在项目目录里把它跑起来、等「预览地址」可用后再截图，截完自动关掉进程。
+              需要构建 / 后端的项目（Vite、Python 服务等）必须填这两项。
+            </p>
+            <label class="field">
+              <span class="field__label">启动命令（在项目目录里执行）</span>
+              <input class="field__input" id="fieldLaunchCommand" type="text" placeholder="例如 node tools/browser-preview/server.js 8791" />
+            </label>
+            <div class="field-row">
+              <label class="field">
+                <span class="field__label">工作目录（可选，相对项目根）</span>
+                <input class="field__input" id="fieldLaunchCwd" type="text" placeholder="例如 test 或 demo1/client-web" />
+              </label>
+              <label class="field">
+                <span class="field__label">预览地址</span>
+                <input class="field__input" id="fieldLaunchUrl" type="text" placeholder="例如 http://127.0.0.1:8791/" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label class="field">
+                <span class="field__label">最多等多久（秒）</span>
+                <input class="field__input" id="fieldLaunchWait" type="number" min="1" max="300" placeholder="15" />
+              </label>
+            </div>
+            <p class="field__hint" id="launchHint"></p>
+          </fieldset>
+        </div>
+      </section>
+
+      <aside class="editor__side">
+        <div class="panel">
+          <h2 class="panel__title">上传文件</h2>
+          <div class="dropzone" id="dropzone">
+            <p class="dropzone__title">把文件或文件夹拖到这里</p>
+            <p class="dropzone__text">也可以点下面的按钮选择。选择整个文件夹时会保留目录结构。</p>
+            <div class="dropzone__actions">
+              <button class="btn btn--ghost btn--small" type="button" id="pickFilesBtn">选择文件</button>
+              <button class="btn btn--ghost btn--small" type="button" id="pickDirBtn">选择文件夹</button>
+            </div>
+            <input type="file" id="fileInput" multiple hidden />
+            <input type="file" id="dirInput" webkitdirectory directory multiple hidden />
+          </div>
+          <p class="panel__hint" id="uploadHint"></p>
+        </div>
+
+        <div class="panel" id="parsePanel" hidden>
+          <h2 class="panel__title">解析结果</h2>
+          <div id="parseBody"></div>
+          <button class="btn btn--primary btn--small" type="button" id="applyParseBtn">应用解析结果</button>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel__title">
+            <span>项目文件</span>
+            <span class="panel__count" id="fileCount">0</span>
+          </h2>
+          <div id="fileList"></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="editor__actions">
+      <button class="btn btn--primary" type="button" id="saveBtn">保存项目</button>
+      <button class="btn btn--ghost" type="button" id="regenCoverBtn" hidden>重新生成预览图</button>
+      <button class="btn btn--danger" type="button" id="deleteBtn">删除项目</button>
+      <a class="btn btn--ghost" href="projects.html">返回项目汇集</a>
+    </div>
+  </div>
+</main>
+
+<div data-site-footer></div>
+
+<script src="js/posts.js"></script>
+<script src="projects/projects-data.js"></script>
+<script src="js/articles-data.js"></script>
+<script src="js/social-data.js"></script>
+<script src="js/site.js"></script>
+<script src="js/blog-service.js"></script>
+<script src="js/project-store.js"></script>
+<script src="js/project-analyzer.js"></script>
+<script src="js/project-files.js"></script>
+<script src="js/project-edit.js"></script>
+</body>
+</html>

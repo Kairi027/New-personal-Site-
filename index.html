@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-login-inline="1">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0F1525" />
+<meta name="color-scheme" content="dark" />
+<title>Kairi 的小站</title>
+<meta name="description" content="Kairi の Site —— 记录代码、星空与安静的时刻。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230F1525'/%3E%3Cellipse cx='16' cy='9' rx='7' ry='2.6' fill='none' stroke='%23FF4DA6' stroke-width='2'/%3E%3Ccircle cx='16' cy='18' r='5' fill='none' stroke='%23DCE1EC' stroke-width='2'/%3E%3Cpath d='M9 28c2.4-3.4 11.6-3.4 14 0' fill='none' stroke='%237B9ACF' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap" />
+<link rel="stylesheet" href="css/style.css" />
+<script src="js/auth.js"></script>
+</head>
+<body class="is-loading" data-page="home">
+
+<!-- ===== 开场渐变遮罩 ===== -->
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro__inner">
+    <div class="intro__sigil">
+      <span class="intro__halo"></span>
+      <span class="intro__letter">K</span>
+    </div>
+    <div class="intro__name">Kairi 的小站</div>
+    <div class="intro__bar"><span></span></div>
+    <div class="intro__tip">正在点亮星空…</div>
+  </div>
+</div>
+
+<div data-site-nav></div>
+
+<main>
+  <!-- ===== 主页（Hero） ===== -->
+  <section class="hero" id="top">
+    <div class="hero__bg" role="img" aria-label="星空下的夜晚插画背景"></div>
+    <div class="hero__veil"></div>
+    <canvas class="starfield" id="starfield" aria-hidden="true"></canvas>
+
+    <div class="hero__content">
+      <p class="hero__item hero__eyebrow" style="--d:.30s">
+        <span class="hero__rule"></span>WELCOME TO<span class="hero__rule"></span>
+      </p>
+
+      <h1 class="hero__item hero__title" style="--d:.48s">
+        <span class="hero__halo" aria-hidden="true"></span>
+        <span class="hero__title-text">Kairi 的小站</span>
+      </h1>
+
+      <p class="hero__item hero__sub" style="--d:.70s">
+        <span id="typewriter"></span><span class="caret" aria-hidden="true"></span>
+      </p>
+
+      <p class="hero__item hero__desc" style="--d:.88s">
+        在喧嚣世界的一角，留一盏灯。写下代码、星空，和那些不想忘记的瞬间。
+      </p>
+
+      <div class="hero__item hero__actions" style="--d:1.06s">
+        <a class="btn btn--primary" href="articles.html">开始阅读</a>
+      </div>
+    </div>
+
+    <a class="hero__scroll" href="#latest" aria-label="向下滚动">
+      <span class="hero__mouse"><span></span></span>
+      向下滚动
+    </a>
+  </section>
+
+  <!-- ===== 最新文章 ===== -->
+  <section class="section" id="latest">
+    <div class="section__glow" aria-hidden="true"></div>
+    <div class="wrap">
+      <header class="section__head reveal">
+        <p class="section__kicker">POSTS</p>
+        <h2 class="section__title">最新文章</h2>
+        <p class="section__lead">
+          目前一共写了 <span id="articleCount" class="accent">0</span> 篇，这里是最近的三篇。
+        </p>
+      </header>
+
+      <div class="posts" id="latestPosts"></div>
+
+      <div class="section__foot reveal">
+        <a class="btn btn--ghost" href="articles.html">查看全部文章 →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 关于 ===== -->
+  <section class="section section--about" id="about">
+    <div class="wrap about">
+      <div class="about__card reveal">
+        <div class="about__avatar">
+          <span class="about__halo" aria-hidden="true"></span>
+          <span class="about__glyph">K</span>
+        </div>
+        <p class="about__name">Kairi</p>
+        <p class="about__role">前端 / 设计爱好者</p>
+        <ul class="about__tags">
+          <li>HTML &amp; CSS</li>
+          <li>JavaScript</li>
+          <li>Python</li>
+          <li>UI 设计</li>
+          <li>音乐</li>
+        </ul>
+      </div>
+
+      <div class="about__body">
+        <p class="section__kicker reveal">ABOUT</p>
+        <h2 class="section__title reveal">关于这个小站</h2>
+        <p class="about__text reveal">
+          你好，我是 Kairi。这里是我在网络世界里的一间小屋——放着几张图、一点音乐，和一些写下来的想法，还有一个存放自己做过的项目的地方。
+        </p>
+        <p class="about__text reveal">
+          我喜欢把界面做得安静一点：深蓝的夜色、偶尔亮起的光环，以及慢慢出现而不是突然跳出来的文字。如果你也喜欢这样的节奏，欢迎常来坐坐。
+        </p>
+        <div class="about__stats">
+          <div class="stat reveal"><span class="stat__num" id="statPosts">0</span><span class="stat__label">篇随手记录</span></div>
+          <div class="stat reveal"><span class="stat__num">2</span><span class="stat__label">个项目可体验</span></div>
+          <div class="stat reveal"><span class="stat__num">24h</span><span class="stat__label">星空的时长</span></div>
+        </div>
+        <div class="about__actions reveal">
+          <a class="btn btn--ghost" href="projects.html">看看我的项目 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div data-site-footer></div>
+
+<!-- ===== 背景音乐（仅首页） ===== -->
+<audio id="bgm" src="music/Home%20BGM.m4a" loop preload="auto" playsinline></audio>
+
+<div class="music-hint" id="musicHint" role="status">
+  <span class="music-hint__icon">♪</span>
+  <span class="music-hint__body">
+    <span class="music-hint__text">点一下这里，音乐就会响起</span>
+    <span class="music-hint__sub">想刷新后也免点击？用「启动博客-自动播放.bat」打开本站</span>
+  </span>
+</div>
+
+<noscript>
+  <p class="noscript">这个页面需要开启 JavaScript 才能播放背景音乐与显示渐变效果。</p>
+</noscript>
+
+<script src="js/posts.js"></script>
+<script src="projects/projects-data.js"></script>
+<script src="js/articles-data.js"></script>
+<script src="js/social-data.js"></script>
+<script src="js/site.js"></script>
+<script src="js/blog-service.js"></script>
+<script src="js/social.js"></script>
+<script src="js/articles.js"></script>
+<script src="js/bgm.js"></script>
+</body>
+</html>

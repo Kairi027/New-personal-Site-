@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0F1525" />
+<meta name="color-scheme" content="dark" />
+<title>文章 · Kairi 的小站</title>
+<meta name="description" content="Kairi 的小站 —— 全部文章，可以在这里新建、编辑或删除。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230F1525'/%3E%3Cellipse cx='16' cy='9' rx='7' ry='2.6' fill='none' stroke='%23FF4DA6' stroke-width='2'/%3E%3Ccircle cx='16' cy='18' r='5' fill='none' stroke='%23DCE1EC' stroke-width='2'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap" />
+<link rel="stylesheet" href="css/style.css" />
+<script src="js/auth.js"></script>
+</head>
+<body data-page="articles">
+
+<div data-site-nav></div>
+
+<main class="page">
+  <div class="page-glow" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header class="page-head reveal">
+      <p class="section__kicker">POSTS</p>
+      <h1 class="page-head__title">文章</h1>
+      <p class="page-head__lead">
+        这里可以新建、编辑和删除文章。内容保存在本浏览器的本地存储里，换电脑或清缓存前记得用下面的按钮备份。
+      </p>
+    </header>
+
+    <div class="toolbar reveal" id="articleTools" hidden>
+      <button class="btn btn--primary" id="newArticleBtn" type="button">新建文章</button>
+      <div class="toolbar__spacer"></div>
+      <button class="btn btn--ghost btn--small" id="exportBtn" type="button">导出 JSON</button>
+      <button class="btn btn--ghost btn--small" id="importBtn" type="button">导入 JSON</button>
+      <button class="btn btn--ghost btn--small" id="copyPostsBtn" type="button">复制为 posts.js</button>
+      <button class="btn btn--ghost btn--small" id="restoreBtn" type="button">恢复默认文章</button>
+      <input type="file" id="importInput" accept="application/json,.json" hidden />
+    </div>
+
+    <div class="rows" id="articleList"></div>
+  </div>
+</main>
+
+<div data-site-footer></div>
+
+<!-- ===== 编辑器 ===== -->
+<div class="modal" id="editorModal" data-modal aria-hidden="true">
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="editorHeading">
+    <header class="modal__head">
+      <h2 class="modal__title" id="editorHeading">新建文章</h2>
+      <button class="modal__close" type="button" id="editorCancel" aria-label="关闭">×</button>
+    </header>
+
+    <form class="form" id="editorForm" novalidate>
+      <label class="field">
+        <span class="field__label">标题 <em>必填</em></span>
+        <input class="field__input" id="fieldTitle" type="text" required placeholder="给这篇文章起个名字" />
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field__label">日期</span>
+          <input class="field__input" id="fieldDate" type="date" />
+        </label>
+        <label class="field">
+          <span class="field__label">标签</span>
+          <input class="field__input" id="fieldTags" type="text" placeholder="前端, 随笔" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field__label">摘要</span>
+        <textarea class="field__input" id="fieldSummary" rows="2" placeholder="一句话概括，会显示在卡片上"></textarea>
+      </label>
+
+      <label class="field">
+        <span class="field__label">正文</span>
+        <textarea class="field__input field__input--body" id="fieldBody" rows="14" placeholder="支持少量 Markdown：# 标题、**加粗**、- 列表、&gt; 引用、``` 代码块"></textarea>
+      </label>
+
+      <footer class="modal__foot">
+        <p class="modal__hint">正文支持少量 Markdown 语法。</p>
+        <button class="btn btn--primary" type="submit">保存</button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<!-- ===== posts.js 导出 ===== -->
+<div class="modal" id="postsModal" data-modal aria-hidden="true">
+  <div class="modal__panel modal__panel--wide" role="dialog" aria-modal="true" aria-label="复制为 posts.js">
+    <header class="modal__head">
+      <h2 class="modal__title">复制为 posts.js</h2>
+      <button class="modal__close" type="button" id="postsModalClose" aria-label="关闭">×</button>
+    </header>
+    <div class="modal__body">
+      <p class="modal__hint">
+        下面的内容已经尝试复制到剪贴板。把它整段粘贴回 <code>js/posts.js</code> 覆盖
+        <code>window.KAIRI_DEFAULT_POSTS</code>，当前文章就会永久固化进项目里（换电脑、换浏览器都还在）。
+      </p>
+      <textarea class="field__input field__input--code" id="postsOutput" rows="14" readonly></textarea>
+    </div>
+  </div>
+</div>
+
+<script src="js/posts.js"></script>
+<script src="projects/projects-data.js"></script>
+<script src="js/articles-data.js"></script>
+<script src="js/social-data.js"></script>
+<script src="js/site.js"></script>
+<script src="js/blog-service.js"></script>
+<script src="js/social.js"></script>
+<script src="js/articles.js"></script>
+</body>
+</html>

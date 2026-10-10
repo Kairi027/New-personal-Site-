@@ -1,0 +1,2 @@
+import 'package:flutter/material.dart';
+class TradePage extends StatelessWidget { const TradePage({super.key}); @override Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('闲置市场'))); }

@@ -1,0 +1,53 @@
+
+> local-life-client-web@0.1.0 dev
+> vite --port 8794 --host 127.0.0.1
+
+
+  VITE v5.4.21  ready in 8758 ms
+
+  ➜  Local:   http://127.0.0.1:8794/
+  ➜  press h + enter to show help
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+00:33:33 [vite] ✨ new dependencies optimized: element-plus/es, element-plus/es/components/base/style/css, element-plus/es/components/empty/style/css, element-plus/es/components/card/style/css, element-plus/es/components/button/style/css
+00:33:33 [vite] ✨ optimized dependencies changed. reloading
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+00:33:34 [vite] http proxy error: /api/v1/sections
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+00:33:34 [vite] http proxy error: /api/v1/posts?section_id=&page=1&page_size=50
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+00:33:38 [vite] http proxy error: /api/v1/sections
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+00:33:38 [vite] http proxy error: /api/v1/posts?section_id=&page=1&page_size=50
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+00:33:43 [vite] http proxy error: /api/v1/sections
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+00:33:43 [vite] http proxy error: /api/v1/posts?section_id=&page=1&page_size=50
+Error: connect ECONNREFUSED 127.0.0.1:8000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)

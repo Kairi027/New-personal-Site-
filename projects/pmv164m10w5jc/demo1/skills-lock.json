@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "skills": {
+    "gitcode-oauth": {
+      "source": "https://gitcode.com/zhoucungen/gitcode-oauth.git",
+      "sourceUrl": "https://gitcode.com/zhoucungen/gitcode-oauth.git",
+      "sourceType": "git",
+      "skillPath": "skills/gitcode-oauth/SKILL.md",
+      "computedHash": "937cd8c0e5c52d8f04fe505b88226955f884f1ace92720a588b3f06b5607b2fc"
+    },
+    "publish-work-to-gallery": {
+      "source": "https://gitcode.com/Lingxi-HandsOn/gallery.git",
+      "sourceUrl": "https://gitcode.com/Lingxi-HandsOn/gallery.git",
+      "sourceType": "git",
+      "skillPath": "skills/publish-work-to-gallery/SKILL.md",
+      "computedHash": "ba82beffb015fb069b849698a6a52aff5c5fa4855f74b89d7b88435ffd57fe39"
+    }
+  }
+}

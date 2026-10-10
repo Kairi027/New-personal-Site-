@@ -1,0 +1,20 @@
+{
+  "appid": "touristappid",
+  "compileType": "game",
+  "projectname": "cloudspire",
+  "setting": {
+    "es6": true,
+    "postcss": false,
+    "minified": true,
+    "urlCheck": false
+  },
+  "libVersion": "latest",
+  "packOptions": {
+    "ignore": [
+      { "type": "folder", "value": "tools" },
+      { "type": "folder", "value": "tests" },
+      { "type": "file", "value": "README.md" }
+    ]
+  },
+  "condition": {}
+}

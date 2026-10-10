@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 · 视频原画提取</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="logo">▶</div>
+      <h1>视频原画提取</h1>
+      <p class="sub">仅限本人与亲友使用 · 请输入访问口令</p>
+    </header>
+
+    <main class="card">
+      <label class="field-label" for="password">访问口令</label>
+      <div class="input-row">
+        <input type="password" id="password" class="text-input"
+               placeholder="请输入口令" autocomplete="current-password" autofocus>
+      </div>
+      <div class="btn-row">
+        <button id="loginBtn" class="btn primary" type="button">进入</button>
+      </div>
+      <div id="error" class="error hidden"></div>
+    </main>
+
+    <footer class="tips">
+      <p>口令由工具所有者提供，请勿外传。</p>
+    </footer>
+  </div>
+  <script src="/login.js"></script>
+</body>
+</html>

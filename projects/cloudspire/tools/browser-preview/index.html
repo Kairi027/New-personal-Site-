@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>云阙飞戈 浏览器预览</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #05070d;
+        overflow: hidden;
+        font-family: system-ui, sans-serif;
+      }
+      .frame {
+        margin-top: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: calc(100vh - 38px);
+      }
+      canvas {
+        width: auto;
+        height: 100%;
+        max-width: 100%;
+        background: #05070d;
+        touch-action: none;
+      }
+      @media (orientation: landscape) {
+        canvas {
+          height: calc(100vh - 38px);
+        }
+      }
+      #keyboard-input {
+        position: fixed;
+        left: 8%;
+        right: 8%;
+        bottom: 16px;
+        z-index: 10;
+        display: none;
+        padding: 14px 16px;
+        font-size: 20px;
+        border: 1px solid #ffd36b;
+        border-radius: 10px;
+        background: #10182a;
+        color: #fff;
+        outline: none;
+      }
+      .debug {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        z-index: 20;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-sizing: border-box;
+        background: rgba(5, 8, 16, 0.92);
+      }
+      .debug button {
+        background: rgba(20, 30, 50, 0.85);
+        color: #dce6ff;
+        border: 1px solid rgba(220, 232, 255, 0.6);
+        border-radius: 8px;
+        padding: 5px 12px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <canvas id="game" width="720" height="1280"></canvas>
+    </div>
+    <input id="keyboard-input" autocomplete="off" />
+    <div class="debug">
+      <button onclick="localStorage.removeItem('cloudspire_auth_v1'); localStorage.removeItem('cloudspire_save_v1'); location.reload();">重置</button>
+    </div>
+    <script src="./wx-adapter.js"></script>
+    <script src="./bundle.js"></script>
+  </body>
+</html>

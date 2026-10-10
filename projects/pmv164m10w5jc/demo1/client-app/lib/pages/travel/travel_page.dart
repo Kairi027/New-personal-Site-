@@ -1,0 +1,2 @@
+import 'package:flutter/material.dart';
+class TravelPage extends StatelessWidget { const TravelPage({super.key}); @override Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('本地出行 - GPS导航'))); }

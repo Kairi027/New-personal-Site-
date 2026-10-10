@@ -1,0 +1,23 @@
+{
+  "name": "local-life-mp",
+  "appid": "",
+  "description": "本地生活综合服务系统 - 小程序端",
+  "versionName": "0.1.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "app-plus": {},
+  "mp-weixin": {
+    "appid": "",
+    "setting": { "urlCheck": false, "es6": true, "postcss": true, "minified": true },
+    "usingComponents": true,
+    "permission": {
+      "scope.userLocation": { "desc": "用于出行规划与导航" }
+    },
+    "requiredPrivateInfos": ["getLocation", "chooseLocation"]
+  },
+  "mp-alipay": {
+    "appid": "",
+    "setting": { "urlCheck": false }
+  },
+  "vueVersion": "3"
+}

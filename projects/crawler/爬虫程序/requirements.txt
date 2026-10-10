@@ -1,0 +1,2 @@
+# 本工具使用 Python 标准库，无需安装任何第三方依赖。
+# 运行：python server\app.py

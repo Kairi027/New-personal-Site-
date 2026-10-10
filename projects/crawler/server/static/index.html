@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>视频原画提取</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="logo">▶</div>
+      <h1>视频原画提取</h1>
+      <p class="sub">个人自用工具 · 支持 B站 / 抖音 / 快手</p>
+    </header>
+
+    <main class="card">
+      <label class="field-label" for="input">粘贴视频链接</label>
+      <div class="input-row">
+        <textarea id="input" rows="2" placeholder="例如 https://v.douyin.com/xxxxx/ 或 https://www.bilibili.com/video/BVxxxx"></textarea>
+      </div>
+      <div class="btn-row">
+        <button id="pasteBtn" class="btn ghost" type="button">粘贴剪贴板</button>
+        <button id="parseBtn" class="btn primary" type="button">解析视频</button>
+      </div>
+
+      <div id="status" class="status hidden">
+        <span class="spinner"></span>
+        <span id="statusText">正在解析，请稍候…</span>
+      </div>
+
+      <div id="error" class="error hidden"></div>
+
+      <div id="result" class="result hidden">
+        <div class="result-head">
+          <span id="platformBadge" class="badge"></span>
+          <span id="note" class="note"></span>
+        </div>
+        <div class="video-row">
+          <img id="cover" class="cover" alt="封面" referrerpolicy="no-referrer" src="">
+          <div class="video-info">
+            <div id="title" class="title"></div>
+            <div id="author" class="author"></div>
+            <div id="duration" class="duration"></div>
+          </div>
+        </div>
+        <div id="formats" class="formats"></div>
+      </div>
+    </main>
+
+    <footer class="tips">
+      <p>本工具仅用于个人学习与备份，请勿下载传播他人受版权保护的视频内容。</p>
+      <p>平台风控可能升级导致解析失败，属正常现象；解析成功后请尽快下载（链接有时效）。</p>
+      <p><a href="#" id="logoutBtn" class="link-btn">退出登录</a></p>
+    </footer>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

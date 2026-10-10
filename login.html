@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-skip-guard="1">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0F1525" />
+<meta name="color-scheme" content="dark" />
+<title>登录 · Kairi 的小站</title>
+<meta name="description" content="Kairi 的小站 —— 请选择登入方式。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230F1525'/%3E%3Cellipse cx='16' cy='9' rx='7' ry='2.6' fill='none' stroke='%23FF4DA6' stroke-width='2'/%3E%3Ccircle cx='16' cy='18' r='5' fill='none' stroke='%23DCE1EC' stroke-width='2'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap" />
+<link rel="stylesheet" href="css/style.css" />
+<script src="js/auth.js"></script>
+</head>
+<!-- data-skip-guard 让 auth.js 不把本页弹走，但登录逻辑仍需要它的 API -->
+<body class="is-login" data-page="login" data-no-layout="1">
+
+<main class="login">
+  <div class="login__glow" aria-hidden="true"></div>
+  <canvas class="starfield" id="starfield" aria-hidden="true"></canvas>
+
+  <div class="login__inner">
+    <header class="login__head">
+      <div class="login__sigil">
+        <span class="login__halo" aria-hidden="true"></span>
+        <span class="login__letter">K</span>
+      </div>
+      <h1 class="login__title">Kairi 的小站</h1>
+      <p class="login__lead">请选择登入方式</p>
+    </header>
+
+    <div class="login__cards">
+      <section class="login-card login-card--dev">
+        <p class="login-card__kicker">DEVELOPER</p>
+        <h2 class="login-card__title">开发者登入</h2>
+        <p class="login-card__text">
+          可以新建、编辑、删除文章与项目，上传项目文件，并用解析结果生成项目介绍与体验。
+        </p>
+
+        <form class="login-form" id="devForm" autocomplete="off">
+          <label class="field">
+            <span class="field__label">账号</span>
+            <input class="field__input" id="devAccount" type="text" autocomplete="username" placeholder="开发者账号" />
+          </label>
+          <label class="field">
+            <span class="field__label">密码</span>
+            <input class="field__input" id="devPassword" type="password" autocomplete="current-password" placeholder="开发者密码" />
+          </label>
+          <p class="login-form__error" id="devError" hidden></p>
+          <button class="btn btn--primary" type="submit" id="devSubmit">进入开发者模式</button>
+        </form>
+      </section>
+
+      <section class="login-card login-card--guest">
+        <p class="login-card__kicker">GUEST</p>
+        <h2 class="login-card__title">访客登入</h2>
+        <p class="login-card__text">
+          浏览全部文章、项目介绍、项目体验，以及项目里的文件与代码（只读）。不需要密码。
+        </p>
+        <ul class="login-card__list">
+          <li>看文章与项目介绍</li>
+          <li>在站内体验项目</li>
+          <li>翻阅项目文件与代码</li>
+        </ul>
+        <button class="btn btn--ghost" type="button" id="guestBtn">以访客身份进入</button>
+      </section>
+    </div>
+
+    <p class="login__foot">
+      <span id="resumeHint" hidden></span>
+      登录状态只保存在本浏览器，点「退出登录」即可切换身份。
+    </p>
+  </div>
+</main>
+
+<script src="js/site.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  function param(name) {
+    var m = new RegExp('[?&]' + name + '=([^&#]*)').exec(window.location.search);
+    if (!m) return '';
+    try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch (err) { return m[1]; }
+  }
+
+  var next = param('next') || 'index.html';
+  if (/^(https?:)?\/\//i.test(next) || next.indexOf('..') !== -1) next = 'index.html';
+
+  var accountInput = document.getElementById('devAccount');
+  var passwordInput = document.getElementById('devPassword');
+  var errorBox = document.getElementById('devError');
+  var submitBtn = document.getElementById('devSubmit');
+  var guestBtn = document.getElementById('guestBtn');
+  var resumeHint = document.getElementById('resumeHint');
+
+  var existing = window.KairiAuth.session();
+  if (existing) {
+    resumeHint.hidden = false;
+    resumeHint.innerHTML = '当前已登录为' +
+      (existing.role === 'dev' ? '开发者' : '访客') +
+      '，<a href="' + next.replace(/"/g, '&quot;') + '">继续进入 →</a>';
+  }
+
+  function showError(message) {
+    errorBox.textContent = message;
+    errorBox.hidden = false;
+  }
+
+  document.getElementById('devForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+    errorBox.hidden = true;
+    var account = accountInput.value.trim();
+    var password = passwordInput.value;
+    if (!account || !password) {
+      showError('请填写账号和密码');
+      return;
+    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = '正在验证…';
+    window.KairiAuth.loginDev(account, password).then(function (ok) {
+      if (ok) {
+        window.location.replace(next);
+        return;
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = '进入开发者模式';
+      showError('账号或密码不正确，请重试');
+      passwordInput.select();
+    }).catch(function () {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '进入开发者模式';
+      showError('验证出错了，请刷新页面重试');
+    });
+  });
+
+  guestBtn.addEventListener('click', function () {
+    window.KairiAuth.loginGuest();
+    window.location.replace(next);
+  });
+})();
+</script>
+</body>
+</html>
