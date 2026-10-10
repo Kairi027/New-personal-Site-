@@ -158,6 +158,10 @@
   /* 带声播放。只能在"有用户激活"或"浏览器本身就允许自动播放"时成功 */
   function tryPlay() {
     if (userPaused) return;
+    /* 登录界面固定不播音乐：等用户点「进入」（kairi:authed）那一下再带声播放。
+       在这一道统一拦住，watchdog / 焦点变化 / 首次手势都不会在登录卡片上
+       偷偷把音乐播起来；换上没登录卡片的页面（例如已登录后刷新）则照常自动播。 */
+    if (loginGateIsUp()) return;
     lastAttemptWithActivation = hasActivation();
     audio.muted = false;
 
@@ -378,12 +382,11 @@
   syncUI();
   startWatchdog();
 
-  /* 一进主界面就播，不等任何点击：下面这种情形能直接成功——
+  /* 一进主界面就播，不等任何点击：这两种情形能直接成功——
        · 浏览器本身就允许出声音（用「启动博客-自动播放.bat」打开，
          或这个站点在 Chrome 里已经攒够媒体参与度 MEI）；
-       · 用户点「进入」那一下之后（kairi:authed），音乐紧接着带声播起来。
-     登录卡片还挡着时也照试：放不出来只留一个静音的 <audio>，不会报错、
-     不会抢先出声；能放就直接播，根本不用等登录。 */
+       · 用户点「进入」那一下（kairi:authed）之后，音乐紧接着带声播起来。
+     登录卡片还挡着的时候不播（tryPlay 里统一拦着），卡片一撤就走上面两条。 */
   bindGesture();
   preferFastSource();
   tryPlay();
