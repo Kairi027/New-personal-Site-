@@ -366,10 +366,11 @@
   syncUI();
   startWatchdog();
 
-  /* 在线版把「下载在线版启动器」这个链接亮出来（本地版保持原样：文件就在旁边） */
+  /* 在线版换成"下载在线版启动器"这套文案（本地版保持原样：文件就在旁边） */
   if (ONLINE && hintLink) {
     hintLink.href = ONLINE_LAUNCHER;
     hintLink.hidden = false;
+    if (hintSubText) hintSubText.textContent = LAUNCHER_TIP;
   }
 
   bindGesture();
