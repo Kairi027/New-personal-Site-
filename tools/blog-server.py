@@ -8,6 +8,9 @@ Kairi 的小站 · 本地服务
   2. 写入 js/articles-data.js、projects/projects-data.js 这类"数据文件"
   3. 保存点赞与评论（data/social.json + js/social-data.js）
 
+另外负责「收录」：写入 / 读取 Study/ 下的 PDF 与批注
+（Study/annotations/<资料id>.json），以及 js/materials-data.js。
+
 另外顺带能把整个博客当静态站点托管（万一 file:// 下连不上服务时的备用入口）。
 
 零依赖：只用 Python 标准库。
@@ -32,15 +35,22 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECTS_DIR = os.path.join(ROOT, "projects")
 DATA_DIR = os.path.join(ROOT, "data")
 JS_DIR = os.path.join(ROOT, "js")
+STUDY_DIR = os.path.join(ROOT, "Study")
 SOCIAL_JSON = os.path.join(DATA_DIR, "social.json")
 SOCIAL_JS = os.path.join(JS_DIR, "social-data.js")
 
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 DATA_TARGETS = {
-    "/api/data/projects": os.path.join(PROJECTS_DIR, "projects-data.js"),
-    "/api/data/articles": os.path.join(JS_DIR, "articles-data.js"),
+    # 接口 → (目标文件, 这份文件里必须出现的全局变量)
+    # 带上标记是因为「写错接口」的代价太大：以前写数据时不校验，一次笔误就能
+    # 把 A 的数据覆盖进 B 的文件里（真的发生过），校验后只会被拒绝。
+    "/api/data/projects": (os.path.join(PROJECTS_DIR, "projects-data.js"), "window.KAIRI_UPLOADED_PROJECTS"),
+    "/api/data/articles": (os.path.join(JS_DIR, "articles-data.js"), "window.KAIRI_ARTICLES"),
+    "/api/data/materials": (os.path.join(JS_DIR, "materials-data.js"), "window.KAIRI_MATERIALS"),
 }
+
+DATA_MARKERS = tuple(marker for _, marker in DATA_TARGETS.values())
 
 MAX_BODY = 512 * 1024 * 1024  # 512MB 上限，防手滑
 
@@ -432,6 +442,10 @@ MIME = {
     ".svg": "image/svg+xml",
     ".mp3": "audio/mpeg",
     ".m4a": "audio/mp4",
+    ".pdf": "application/pdf",
+    ".bcmap": "application/octet-stream",
+    ".ttf": "font/ttf",
+    ".pfb": "application/octet-stream",
     ".txt": "text/plain; charset=utf-8",
     ".md": "text/plain; charset=utf-8",
 }
@@ -551,6 +565,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json({"ok": True, "root": ROOT, "port": PORT})
             if path == "/api/social":
                 return self.send_json(read_social())
+            if path == "/api/study/list":
+                return self.study_list()
             if path.startswith("/api/file/"):
                 return self.get_project_file(path)
             return self.serve_static(path)
@@ -562,6 +578,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path.startswith("/api/file/"):
                 return self.put_project_file(path)
+            if path.startswith("/api/study/"):
+                return self.put_study_file(path)
             return self.send_json({"ok": False, "message": "接口不存在"}, 404)
         except Exception as exc:  # noqa: BLE001
             return self.send_json({"ok": False, "message": str(exc)}, 400)
@@ -573,6 +591,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.delete_project(path)
             if path.startswith("/api/file/"):
                 return self.delete_project_file(path)
+            if path.startswith("/api/study/"):
+                return self.delete_study_file(path)
             return self.send_json({"ok": False, "message": "接口不存在"}, 404)
         except Exception as exc:  # noqa: BLE001
             return self.send_json({"ok": False, "message": str(exc)}, 400)
@@ -653,13 +673,69 @@ class Handler(BaseHTTPRequestHandler):
             shutil.rmtree(target, ignore_errors=True)
         return self.send_json({"ok": True, "removed": project_id})
 
+    # ---------------- 收录（Study/ 下的 PDF 与批注） ----------------
+
+    def split_study_path(self, path):
+        rest = path[len("/api/study/"):]
+        parts = [urllib.parse.unquote(p) for p in rest.split("/") if p not in ("", ".")]
+        if not parts:
+            raise ValueError("路径不完整")
+        if any(p == ".." for p in parts):
+            raise ValueError("路径不合法")
+        return parts
+
+    def study_list(self):
+        """Study/ 下已有哪些 PDF（顶层，不含 annotations/ 之类的子目录）。"""
+        os.makedirs(STUDY_DIR, exist_ok=True)
+        files = []
+        try:
+            names = sorted(os.listdir(STUDY_DIR))
+        except OSError:
+            names = []
+        for name in names:
+            full = os.path.join(STUDY_DIR, name)
+            if os.path.isfile(full) and name.lower().endswith(".pdf"):
+                files.append({
+                    "name": name,
+                    "path": "Study/" + name,
+                    "size": os.path.getsize(full),
+                })
+        return self.send_json({"ok": True, "files": files})
+
+    def put_study_file(self, path):
+        """写 Study/ 下的文件：上传 PDF、保存批注 JSON 都走这里。"""
+        parts = self.split_study_path(path)
+        target = safe_path(STUDY_DIR, *parts)
+        body = self.read_body()
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        with open(target, "wb") as fh:
+            fh.write(body)
+        return self.send_json({
+            "ok": True,
+            "bytes": len(body),
+            "path": os.path.relpath(target, ROOT).replace("\\", "/"),
+        })
+
+    def delete_study_file(self, path):
+        parts = self.split_study_path(path)
+        target = safe_path(STUDY_DIR, *parts)
+        if os.path.isdir(target):
+            shutil.rmtree(target, ignore_errors=True)
+        elif os.path.isfile(target):
+            os.remove(target)
+        return self.send_json({"ok": True})
+
     # ---------------- 数据文件 ----------------
 
     def write_data_file(self, path):
-        target = DATA_TARGETS[path]
+        target, marker = DATA_TARGETS[path]
         text = self.read_body().decode("utf-8", "ignore")
-        if "window.KAIRI_" not in text:
-            raise ValueError("内容看起来不是博客数据文件，已拒绝写入")
+        if marker not in text:
+            raise ValueError("内容里没有 %s，看起来不是这份数据文件，已拒绝写入" % marker)
+        for other in DATA_MARKERS:
+            if other != marker and other in text:
+                raise ValueError(
+                    "内容里出现了 %s，和 %s 对不上，已拒绝写入" % (other, os.path.basename(target)))
         os.makedirs(os.path.dirname(target), exist_ok=True)
         tmp = target + ".tmp"
         with open(tmp, "w", encoding="utf-8") as fh:

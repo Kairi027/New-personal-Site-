@@ -209,7 +209,7 @@
           '<section class="login-card login-card--dev">' +
             '<p class="login-card__kicker">DEVELOPER</p>' +
             '<h2 class="login-card__title">开发者登入</h2>' +
-            '<p class="login-card__text">可以新建、编辑、删除文章与项目，上传项目文件，并用解析结果生成项目介绍与体验。</p>' +
+            '<p class="login-card__text">可以新建、编辑、删除文章、项目与收录资料，上传项目文件，并用解析结果生成项目介绍与体验。</p>' +
             '<form class="login-form" id="gateDevForm" autocomplete="off">' +
               '<label class="field">' +
                 '<span class="field__label">账号</span>' +
@@ -226,10 +226,11 @@
           '<section class="login-card login-card--guest">' +
             '<p class="login-card__kicker">GUEST</p>' +
             '<h2 class="login-card__title">访客登入</h2>' +
-            '<p class="login-card__text">浏览全部文章、项目介绍、项目体验，以及项目里的文件与代码（只读）。不需要密码。</p>' +
+            '<p class="login-card__text">浏览全部文章、项目介绍、项目体验、收录的资料，以及项目里的文件与代码（只读）。不需要密码。</p>' +
             '<ul class="login-card__list">' +
               '<li>看文章与项目介绍</li>' +
               '<li>在站内体验项目</li>' +
+              '<li>翻阅收录的资料</li>' +
               '<li>翻阅项目文件与代码</li>' +
             '</ul>' +
             '<button class="btn btn--ghost" type="button" id="gateGuestBtn">以访客身份进入</button>' +

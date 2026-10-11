@@ -9,9 +9,11 @@
 
 > 想让首页背景音乐**刷新后也免点击自动播放**，请用 `启动博客-自动播放.bat` 打开（原因见下面「登录与身份」）；在平时的浏览器窗口里，刷新之后按浏览器规则得点一下。
 
-另外附带一个**本地服务**（`tools/blog-server.py`，只监听 `127.0.0.1:8765`），它负责三件事：
-写项目文件、读项目文件（打包下载时读取图片等二进制）、保存点赞评论与回复。
-**浏览不需要它，写东西才需要。** 服务没启动时，浏览、看代码、下载源码都正常，只是不能保存、评论只存在本机。
+另外附带一个**本地服务**（`tools/blog-server.py`，只监听 `127.0.0.1:8765`），它负责四件事：
+写项目文件、读项目文件（打包下载时读取图片等二进制）、保存点赞评论与回复、管理收录资料
+（把 PDF 收进 `Study/`、保存批注）。**浏览不需要它，写东西才需要。**
+服务没启动时，浏览、看代码、下载源码都正常，只是不能保存、评论只存在本机；
+收录阅读器会退回浏览器自带的 PDF 阅读器（页面里会写清楚）。
 
 ## 登录与身份
 
@@ -19,8 +21,8 @@
 
 | 身份 | 怎么进 | 能做什么 |
 | --- | --- | --- |
-| 开发者 | 账号 `kairi001176` / 密码 `wtjzxh1979` | 新建 / 编辑 / 删除文章与项目、上传项目文件、回复评论 |
-| 访客 | 一键进入，不需要密码 | 看文章、点赞、评论；看项目简介、看源码仓库、打包下载 |
+| 开发者 | 账号 `kairi001176` / 密码 `wtjzxh1979` | 新建 / 编辑 / 删除文章、项目与收录资料、上传项目文件、在资料上批注、回复评论 |
+| 访客 | 一键进入，不需要密码 | 看文章、点赞、评论；看项目简介、看源码仓库、打包下载；翻阅收录的资料（看不到批注） |
 
 - 登录状态记在本浏览器里，直到点右上角徽章 →「退出登录」。除首页和登录页外，任何页面没有会话都会自动跳到登录页。
 - 首页音乐只有一个控制：导航栏右上角的「音乐」按钮（点一下播放 / 再点一下暂停，播放中图标会转）。**登录卡片期间固定不播**，点「进入」成功那一刻和开场渐变特效一起开始播。
@@ -84,6 +86,35 @@
 - 文章存在 `js/articles-data.js`（由本地服务写入，随文件夹传播）。文件为空时会退回 `js/posts.js` 的默认文章或浏览器 localStorage，并择机写回文件。
 - 备份按钮：`导出 JSON`、`导入 JSON`、`复制为 posts.js`、`恢复默认文章`（都不影响已有文章）。
 
+## 收录（Study）
+
+导航栏第 4 项「收录」（`study.html`）是本机资料的架子：论文、手册、讲义都能收进来，
+**开发者和访客都能看**。列表点进去是 `material.html?id=<资料id>`，一份资料一页页往下读。
+
+- **向下滚动就能翻完整份**：阅读器不套浏览器自带的 PDF 框，而是用内置的 pdf.js
+  把每一页画成 canvas 竖着排下来（页码、缩放、"适合宽度"都在顶部工具条里），
+  所以滚动是整个页面的滚动，手机上也顺。
+- **开发者批注**：资料页工具条上有「批注 / 橡皮 / 撤销 / 清空本页 / 颜色 / 粗细 / 保存批注」。
+  批注按"页内归一化坐标"存（相对页宽高 0~1），所以改缩放、换屏幕都不会跑位。
+  点「保存批注」写入 `Study/annotations/<资料id>.json`；服务没启动时只存在本机浏览器，
+  页面会明确提示。**批注只有开发者能看到**：访客不会去读批注文件，页面也不会画出来
+  （`Study/annotations/` 已在 `.gitignore` 里，不会跟着仓库发到线上）。
+- **开发者新建 / 编辑 / 删除**：「收录」页右上角工具条（访客看不到）。
+  新建时可以**上传 PDF**（直接写进 `Study/`），也可以**从 Study 里挑一个**已有的 PDF
+  （列表由服务读取），或者手动填 `Study/文件名.pdf`。
+  删除只删"这一条记录"，`Study/` 里的 PDF 原件不动。
+- 资料清单存在 `js/materials-data.js`（服务写入，随文件夹传播；服务没启动时退回 localStorage），
+  PDF 原件放在 `Study/` 下。
+- 关于**为什么中文 PDF 能正常显示**：内置的 pdf.js 需要额外加载中文 CMap
+  （`js/vendor/pdfjs/cmaps/`），否则用 GBK / UniGB-UCS2-H 这类编码的中文 PDF 会整段中文画不出来。
+  这部分已经和 pdf.js 一起内置，见 `js/vendor/pdfjs/README.txt`。
+
+## 关于按钮（右下角）
+
+顶部导航原来第 4 项「关于」挪到了**右下角的常驻胶囊按钮**（粉色圆点 + 关于），
+点击滚到首页的「关于这个小站」区块（从别的页面点会先回首页再定位）。
+首页那个"点一下放音乐"的提示条会自动排在它上方，两者不重叠。
+
 ## 点赞与评论
 
 - 数据存在 `data/social.json`，并由服务同步生成 `js/social-data.js`（`file://` 页面只能靠 `<script src>` 读它）。
@@ -107,7 +138,9 @@
 | `GET /api/ping` | 探活 |
 | `PUT` / `DELETE` / `GET /api/file/<项目id>/<路径>` | 写 / 删 / 读项目文件 |
 | `DELETE /api/project/<项目id>` | 递归删除项目目录 |
-| `POST /api/data/projects`、`POST /api/data/articles` | 写入数据文件 |
+| `POST /api/data/projects`、`POST /api/data/articles`、`POST /api/data/materials` | 写入数据文件（会校验内容里的全局变量名，写错接口会被拒绝） |
+| `GET /api/study/list` | 列出 `Study/` 里已有的 PDF |
+| `PUT` / `DELETE /api/study/<路径>` | 写入 / 删除 `Study/` 下的文件（上传 PDF、保存批注 JSON） |
 | `GET /api/social`；`POST /api/social/like`、`/comment`、`/reply`、`/delete-comment` | 互动 |
 | `POST /api/screenshot` | 生成封面。`mode` 三选一：`web`（起服务后截那个地址）/ `static`（直接开页面）/ `desktop`（跑起来抓程序窗口）；不传 `mode` 就按老规则推断（有 `url` 当 web，只有 `command` 当 desktop）。参数：`projectId` / `name` / `mode` / `entry` / `command` / `cwd` / `url` / `waitMs` / `settleMs` |
 
@@ -121,6 +154,7 @@ login.html                 登录页（用 data-skip-guard 跳过登录守卫）
 index.html / articles.html / article.html
 projects.html / project.html        项目列表与项目页（介绍 + 仓库）
 project-edit.html                   开发者：项目管理（元数据 + 上传 + 解析 + 文件）
+study.html / material.html           收录列表与资料阅读器（含开发者批注）
 
 启动博客服务.bat / 后台启动博客服务.vbs / 安装开机自启.vbs / 卸载开机自启.vbs
 创建桌面快捷方式.vbs                在桌面放一个「Kairi 的小站」（指向下面的自动播放启动器）
@@ -141,9 +175,15 @@ js/project-files.js                 文件树 + 代码查看器（未内联的�
 js/zip.js                           零依赖 ZIP 打包（store 模式）
 js/project-edit.js                  项目管理页逻辑
 js/projects.js                      项目列表与项目页逻辑
+js/materials-data.js                收录数据（自动生成，请勿手改）
+js/materials.js                     收录：数据读写 + 列表 / 新建 / 编辑 / 删除 / 上传
+js/material-reader.js               收录阅读器：pdf.js 渲染 + 滚动阅读 + 开发者批注
+js/vendor/pdfjs/                    内置 pdf.js 3.11.174（含 cmaps / standard_fonts，Apache-2.0）
 
 projects/projects-data.js           项目数据（自动生成，请勿手改）
 projects/<项目id>/                  每个项目的仓库文件
+Study/<资料>.pdf                    收录的 PDF 原件
+Study/annotations/<资料id>.json       开发者批注（按页存笔画，自动生成）
 js/articles-data.js                 文章数据（自动生成）
 js/social-data.js                   互动数据（自动生成）
 data/social.json                    互动数据源（服务读写）
@@ -159,6 +199,8 @@ pics/  music/                       首页背景图与背景音乐
 | 副标题轮播文案 | `js/site.js` 里 `initTypewriter` 的 `phrases` |
 | 默认文章 | `js/posts.js` 的 `window.KAIRI_DEFAULT_POSTS` |
 | 内置项目的简介 | 在「项目」页点进去 → 编辑项目（改动记进 `projects-data.js`） |
+| 收录里放什么资料 | 把 PDF 放进 `Study/`，在「收录」页点「新建收录」；也能直接改 `js/materials-data.js` |
+| 右下角「关于」按钮 | `js/site.js` 的 `buildAboutFab()`；样式是 `css/style.css` 里的 `.about-fab` |
 | 背景图 / 背景音乐 | 替换 `pics/Home.webp` / `music/Home BGM.m4a`，或改 CSS 与 `<audio>` 的路径 |
 | 主题配色 | `css/style.css` 顶部 `:root` 的变量 |
 | 服务端口 | `tools/blog-server.py` 顶部的 `PORT`（改完记得同步 `js/blog-service.js` 里的 `PORT`） |
@@ -169,3 +211,10 @@ pics/  music/                       首页背景图与背景音乐
 - 访客的点赞以浏览器为粒度；评论昵称可随意填写，没有账号体系。
 - 上传不做体积上限，但文本内联有 2MB 预算（只影响浏览速度，不影响磁盘上的完整文件）。
 - `file://` 下跨文件 `fetch` 与 ES Module 会被浏览器拦截，本项目刻意避开了这两者。
+- 收录阅读器内置了 pdf.js（`js/vendor/pdfjs/`，约 3MB）：`file://` 下页面读不了同目录文件，
+  所以 PDF 字节、CMap 字体数据、批注 JSON 在 `file://` 下一律通过本地服务读取；
+  **服务没启动时会自动退回浏览器自带的 PDF 阅读器**（滚动在框里，批注不可用），页面顶部会说明。
+- 批注存在 `Study/annotations/<资料id>.json`，且只有开发者可见（访客既不读也不画）；
+  服务没启动时只存在当前浏览器（localStorage），换浏览器或清缓存就没了。
+  这个目录被 `.gitignore` 排除，不会推送到 GitHub。
+- `Study/` 下的 PDF 是原件，删收录只删记录、不删文件；目录里的 PDF 需要手动清理。

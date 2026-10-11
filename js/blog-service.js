@@ -64,6 +64,13 @@
     return encodeURIComponent(projectId) + '/' + parts.join('/');
   }
 
+  /* 相对博客根目录的路径要按段编码（Study/联邦学习.pdf 这类中文文件名） */
+  function encodeSegments(relPath) {
+    return String(relPath).split('/').filter(Boolean).map(function (part) {
+      return encodeURIComponent(part);
+    }).join('/');
+  }
+
   function putFile(projectId, filePath, data) {
     return fetch(url('/api/file/' + encodePath(projectId, filePath)), {
       method: 'PUT',
@@ -93,8 +100,55 @@
       });
   }
 
+  /* ---------------- 收录（Study 文件夹） ---------------- */
+
+  /* 根目录下任意文件的读取地址：file:// 下走本地服务，http 下就走同源相对路径 */
+  function assetUrl(relPath) {
+    if (window.location.protocol === 'file:') {
+      return url('/' + encodeSegments(relPath));
+    }
+    return encodeSegments(relPath);
+  }
+
+  function studyList() {
+    return jsonFetch('/api/study/list');
+  }
+
+  /* /api/study/ 的根就是 Study 目录，所以路径里要去掉开头的 "Study/" */
+  function studyParts(relPath) {
+    var parts = String(relPath).split('/').filter(Boolean);
+    if (parts.length && parts[0].toLowerCase() === 'study') parts = parts.slice(1);
+    if (!parts.length) throw new Error('Study 路径不完整');
+    return parts.map(encodeURIComponent).join('/');
+  }
+
+  function putStudyFile(relPath, data) {
+    return fetch(url('/api/study/' + studyParts(relPath)), {
+      method: 'PUT',
+      cache: 'no-store',
+      body: data
+    }).then(function (res) {
+      if (!res.ok) throw new Error('写入 ' + relPath + ' 失败（' + res.status + '）');
+      return res.json();
+    });
+  }
+
+  function deleteStudyFile(relPath) {
+    return fetch(url('/api/study/' + studyParts(relPath)), { method: 'DELETE' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('删除 ' + relPath + ' 失败（' + res.status + '）');
+        return res.json();
+      });
+  }
+
   function writeDataFile(kind, text) {
-    var target = kind === 'articles' ? '/api/data/articles' : '/api/data/projects';
+    var targets = {
+      articles: '/api/data/articles',
+      projects: '/api/data/projects',
+      materials: '/api/data/materials'
+    };
+    var target = targets[kind];
+    if (!target) return Promise.reject(new Error('未知的数据文件类型：' + kind));
     return fetch(url(target), {
       method: 'POST',
       cache: 'no-store',
@@ -165,6 +219,11 @@
     fileUrl: fileUrl,
     deleteFile: deleteFile,
     deleteProject: deleteProject,
+    encodeSegments: encodeSegments,
+    assetUrl: assetUrl,
+    studyList: studyList,
+    putStudyFile: putStudyFile,
+    deleteStudyFile: deleteStudyFile,
     writeDataFile: writeDataFile,
     getSocial: getSocial,
     like: like,

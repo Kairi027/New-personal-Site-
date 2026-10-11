@@ -125,14 +125,23 @@
     { key: 'home', label: '首页', href: 'index.html' },
     { key: 'articles', label: '文章', href: 'articles.html' },
     { key: 'projects', label: '项目', href: 'projects.html' },
-    { key: 'about', label: '关于', href: 'index.html#about' }
+    { key: 'study', label: '收录', href: 'study.html' }
   ];
 
   function activeKey() {
     if (PAGE === 'article' || PAGE === 'articles') return 'articles';
     if (PAGE === 'projects' || PAGE === 'project' || PAGE === 'project-intro' || PAGE === 'project-play') return 'projects';
-    if (PAGE === 'about') return 'about';
+    if (PAGE === 'study' || PAGE === 'material') return 'study';
     return 'home';
+  }
+
+  /* 右下角常驻的「关于」：顶部导航腾出来的位置，改成角落里的一个小胶囊 */
+  function buildAboutFab() {
+    return '' +
+      '<a class="about-fab" href="index.html#about" title="关于这个小站" aria-label="关于这个小站">' +
+        '<span class="about-fab__dot" aria-hidden="true"></span>' +
+        '<span class="about-fab__text">关于</span>' +
+      '</a>';
   }
 
   function buildNav() {
@@ -167,7 +176,8 @@
         '</a>' +
         '<nav class="nav__links" aria-label="主导航">' + links + '</nav>' +
         '<div class="nav__side">' + music + badge + '</div>' +
-      '</header>';
+      '</header>' +
+      buildAboutFab();
   }
 
   function buildFooter() {
@@ -185,6 +195,7 @@
             '<a href="index.html">首页</a>' +
             '<a href="articles.html">文章</a>' +
             '<a href="projects.html">项目</a>' +
+            '<a href="study.html">收录</a>' +
             '<a href="index.html#about">关于</a>' +
             '<a href="#" class="footer__top js-top">回到顶部 ↑</a>' +
           '</nav>' +
@@ -196,6 +207,10 @@
   function mountLayout() {
     /* 登录页不要导航和页脚，但需要星空等通用能力 */
     if (body.getAttribute('data-no-layout') === '1') return;
+
+    /* 右下角「关于」是导航的伴生元素：重挂前先清掉旧的，免得登录后出现两个 */
+    var staleFab = document.querySelector('.about-fab');
+    if (staleFab && staleFab.parentNode) staleFab.parentNode.removeChild(staleFab);
 
     var navHost = document.querySelector('[data-site-nav]');
     if (navHost) {
@@ -315,8 +330,8 @@
         '<p class="idpanel__role">当前身份：<b>' + (isDev ? '开发者' : '访客') + '</b></p>' +
         '<p class="idpanel__hint">' +
           (isDev
-            ? '可以新建 / 编辑 / 删除文章与项目，也可以上传项目文件。'
-            : '访客只能浏览：文章、项目介绍、项目体验、项目文件（只读）。') +
+            ? '可以新建 / 编辑 / 删除文章、项目与收录资料，也可以上传项目文件、在资料上批注。'
+            : '访客只能浏览：文章、项目介绍、项目体验、项目文件与收录资料（只读）。') +
         '</p>' +
         (isDev ? passwordFormHtml() : '') +
         '<button class="btn btn--ghost btn--small" type="button" id="logoutBtn">退出登录</button>';
@@ -348,12 +363,12 @@
     initIdentity();
     var auth = window.KairiAuth;
     if (auth && auth.role() === 'dev' && auth.takePendingNotice()) {
-      toast('当前为开发者模式：可以新建 / 编辑 / 删除文章与项目，也可以上传项目文件。');
+      toast('当前为开发者模式：可以新建 / 编辑 / 删除文章、项目与收录资料，也可以上传项目文件、在资料上批注。');
     }
   }
 
   if (window.KairiAuth && window.KairiAuth.role() === 'dev' && window.KairiAuth.takePendingNotice()) {
-    toast('当前为开发者模式：可以新建 / 编辑 / 删除文章与项目，也可以上传项目文件。');
+    toast('当前为开发者模式：可以新建 / 编辑 / 删除文章、项目与收录资料，也可以上传项目文件、在资料上批注。');
   }
 
   /* ---------------------------------------------------------------------

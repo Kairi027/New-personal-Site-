@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0F1525" />
+<meta name="color-scheme" content="dark" />
+<title>收录 · Kairi 的小站</title>
+<meta name="description" content="Kairi 的小站 —— 收进来的资料都放在这里，可以一页页翻，开发者还能用笔批注。" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230F1525'/%3E%3Cellipse cx='16' cy='9' rx='7' ry='2.6' fill='none' stroke='%23FF4DA6' stroke-width='2'/%3E%3Ccircle cx='16' cy='18' r='5' fill='none' stroke='%23DCE1EC' stroke-width='2'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap" />
+<link rel="stylesheet" href="css/style.css" />
+<script src="js/auth.js"></script>
+</head>
+<body data-page="study">
+
+<div data-site-nav></div>
+
+<main class="page">
+  <div class="page-glow" aria-hidden="true"></div>
+  <div class="wrap">
+    <header class="page-head reveal">
+      <p class="section__kicker">STUDY</p>
+      <h1 class="page-head__title">收录</h1>
+      <p class="page-head__lead">
+        这里放我收进来的资料：论文、手册、讲义……目前 <span class="accent" id="materialCount">0</span> 份，
+        开发者和访客都能翻。点开任意一份，向下滚动就能一页页读完。
+      </p>
+    </header>
+
+    <div class="toolbar reveal" id="materialTools" hidden>
+      <button class="btn btn--primary" id="newMaterialBtn" type="button">新建收录</button>
+      <div class="toolbar__spacer"></div>
+      <span class="toolbar__note">开发者模式：可以新建 / 编辑 / 删除收录，并在读的时候用笔批注</span>
+    </div>
+
+    <div class="rows" id="materialList"></div>
+  </div>
+</main>
+
+<div data-site-footer></div>
+
+<!-- ===== 收录编辑器 ===== -->
+<div class="modal" id="materialModal" data-modal aria-hidden="true">
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="materialHeading">
+    <header class="modal__head">
+      <h2 class="modal__title" id="materialHeading">新建收录</h2>
+      <button class="modal__close" type="button" id="materialCancel" aria-label="关闭">×</button>
+    </header>
+
+    <form class="form" id="materialForm" novalidate>
+      <label class="field">
+        <span class="field__label">标题 <em>必填</em></span>
+        <input class="field__input" id="materialTitle" type="text" required placeholder="这份资料叫什么" />
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field__label">出处 / 来源</span>
+          <input class="field__input" id="materialSource" type="text" placeholder="期刊、作者或网址，可以留空" />
+        </label>
+        <label class="field">
+          <span class="field__label">收录日期</span>
+          <input class="field__input" id="materialDate" type="date" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field__label">标签</span>
+        <input class="field__input" id="materialTags" type="text" placeholder="论文, 综述" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">简介</span>
+        <textarea class="field__input" id="materialSummary" rows="2" placeholder="一句话说明这是什么、为什么收进来"></textarea>
+      </label>
+
+      <div class="field">
+        <span class="field__label">PDF 文件 <em>必填</em></span>
+        <input class="field__input" id="materialFile" type="text" placeholder="Study/文件名.pdf" />
+        <div class="field__actions">
+          <button class="btn btn--ghost btn--tiny" type="button" id="materialUploadBtn">上传 PDF 到 Study/</button>
+          <button class="btn btn--ghost btn--tiny" type="button" id="materialPickBtn">从 Study 里挑一个</button>
+        </div>
+        <p class="field__hint">
+          上传会把 PDF 写进博客目录的 <code>Study/</code>。本地服务没启动时也可以手动把 PDF 拷进
+          <code>Study/</code>，再在这里填 <code>Study/文件名.pdf</code>。
+        </p>
+        <input type="file" id="materialUpload" accept="application/pdf,.pdf" hidden />
+      </div>
+
+      <footer class="modal__foot">
+        <p class="modal__hint">保存后访客立刻就能在「收录」里看到它。</p>
+        <button class="btn btn--primary" type="submit">保存</button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<!-- ===== 从 Study 文件夹里挑文件 ===== -->
+<div class="modal" id="studyPicker" data-modal aria-hidden="true">
+  <div class="modal__panel modal__panel--small" role="dialog" aria-modal="true" aria-label="选择 Study 里的文件">
+    <header class="modal__head">
+      <h2 class="modal__title">Study 文件夹里的 PDF</h2>
+      <button class="modal__close" type="button" id="studyPickerClose" aria-label="关闭">×</button>
+    </header>
+    <div class="modal__body">
+      <ul class="filelist" id="studyPickerList"></ul>
+      <p class="modal__hint">
+        列表来自博客目录的 <code>Study/</code>（需要本地服务在跑）。没有想要的？把 PDF 拷进那个文件夹后再点一次按钮。
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="js/materials-data.js"></script>
+<script src="js/site.js"></script>
+<script src="js/blog-service.js"></script>
+<script src="js/materials.js"></script>
+</body>
+</html>

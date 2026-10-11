@@ -2000,7 +2000,8 @@ textarea.field__input { resize: vertical; min-height: 92px; }
 
 .footer {
   position: relative;
-  padding: clamp(40px, 6vw, 64px) clamp(18px, 4.5vw, 54px);
+  /* 底部多留一截：右下角那个常驻的「关于」胶囊正好落在这个区域 */
+  padding: clamp(40px, 6vw, 64px) clamp(18px, 4.5vw, 54px) calc(clamp(40px, 6vw, 64px) + 54px);
   border-top: 1px solid var(--line);
   background:
     radial-gradient(120% 140% at 50% 0%, rgba(74, 111, 165, 0.22) 0%, transparent 60%),
@@ -2046,7 +2047,7 @@ textarea.field__input { resize: vertical; min-height: 92px; }
 .music-hint {
   position: fixed;
   right: clamp(16px, 3vw, 34px);
-  bottom: clamp(16px, 3vw, 34px);
+  bottom: calc(clamp(16px, 3vw, 34px) + 62px);
   z-index: 95;
   display: inline-flex;
   align-items: center;
@@ -3066,4 +3067,303 @@ body.is-gated .intro { display: none; }
 .launch-tip:hover {
   background: rgba(255, 77, 166, 0.22);
   border-color: rgba(255, 132, 194, 0.8);
+}
+
+/* ==========================================================================
+   收录（Study）
+   右下角常驻「关于」 + 资料列表 + 资料阅读器（含开发者批注）
+   ========================================================================== */
+
+/* ---- 右下角常驻的「关于」 ---- */
+
+.about-fab {
+  position: fixed;
+  right: clamp(16px, 3vw, 34px);
+  bottom: clamp(16px, 3vw, 34px);
+  z-index: 96;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 18px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 132, 194, 0.34);
+  background: rgba(14, 21, 40, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 18px 42px -20px rgba(0, 0, 0, 0.95);
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  transition: color 0.35s var(--ease), border-color 0.35s var(--ease),
+              transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
+}
+
+.about-fab:hover {
+  color: #fff;
+  border-color: rgba(255, 132, 194, 0.72);
+  transform: translateY(-2px);
+  box-shadow: 0 22px 48px -20px rgba(255, 77, 166, 0.5);
+}
+
+.about-fab__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: 0 0 12px rgba(255, 77, 166, 0.95);
+  animation: haloPulse 2.6s ease-in-out infinite;
+}
+
+/* ---- 资料列表 ---- */
+
+.row__badge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 132, 194, 0.32);
+  background: rgba(255, 77, 166, 0.1);
+  color: #FFD3E8;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+}
+
+.row__source {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+}
+
+/* ---- 阅读器 ---- */
+
+/* 用相邻兄弟间距而不是 grid：grid 会让 sticky 工具栏的包含块缩成自己那一行，
+   滚动时就不粘了 */
+.reader > * + * { margin-top: 18px; }
+
+.reader__head { display: grid; gap: 10px; }
+
+.reader__kicker {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  color: var(--text-dim);
+}
+
+.reader__kicker a { transition: color 0.3s var(--ease); }
+.reader__kicker a:hover { color: var(--pink-2); }
+
+.reader__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 3.4vw, 2.15rem);
+  line-height: 1.45;
+}
+
+.reader__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-dim);
+}
+
+.reader__source { margin: 0; font-size: 0.88rem; color: var(--text-soft); }
+
+.reader__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+
+.reader__bar {
+  position: sticky;
+  top: 86px;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(12, 18, 34, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 20px 44px -30px rgba(0, 0, 0, 0.95);
+}
+
+.reader__group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 10px;
+  border-right: 1px solid var(--line-soft);
+}
+
+.reader__group:last-child { border-right: none; padding-right: 0; }
+.reader__group--pen { margin-left: auto; }
+
+.reader__zoom {
+  min-width: 54px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.reader__page {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbtn {
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(30, 42, 72, 0.5);
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.28s var(--ease), color 0.28s var(--ease), border-color 0.28s var(--ease);
+}
+
+.toolbtn:hover { color: #fff; border-color: rgba(255, 132, 194, 0.5); }
+
+.toolbtn.is-active {
+  color: #FFD3E8;
+  border-color: rgba(255, 132, 194, 0.7);
+  background: rgba(255, 77, 166, 0.16);
+}
+
+.pen-swatches { display: inline-flex; align-items: center; gap: 7px; }
+
+.pen-swatch {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  transition: transform 0.24s var(--ease), box-shadow 0.24s var(--ease);
+}
+
+.pen-swatch:hover { transform: scale(1.12); }
+
+.pen-swatch.is-active {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.16);
+}
+
+.pen-size { display: inline-flex; align-items: center; }
+.pen-size input { width: 80px; accent-color: var(--pink); }
+
+.reader__notice {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 200, 120, 0.4);
+  background: rgba(255, 200, 120, 0.08);
+  padding: 12px 16px;
+  font-size: 0.84rem;
+  line-height: 1.8;
+  color: #FFE3B8;
+}
+
+.reader__notice--ok {
+  border-color: rgba(107, 231, 168, 0.35);
+  background: rgba(107, 231, 168, 0.08);
+  color: #CDF0DE;
+}
+
+.reader__stage { display: grid; gap: 20px; justify-items: center; }
+
+.rpage {
+  position: relative;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -32px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(150, 180, 230, 0.14);
+}
+
+.rpage__canvas,
+.rpage__ink {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.rpage__ink { pointer-events: none; }
+
+.reader__stage.is-ink .rpage__ink,
+.reader__stage.is-erase .rpage__ink {
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.reader__stage.is-ink .rpage__ink { cursor: crosshair; }
+.reader__stage.is-erase .rpage__ink { cursor: cell; }
+
+.rpage__num {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 2;
+  padding: 2px 9px;
+  border-radius: 99px;
+  background: rgba(10, 16, 30, 0.62);
+  color: #DCE6F8;
+  font-size: 0.7rem;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.rpage__skeleton {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(100deg, #F3F6FC 28%, #E3E9F4 50%, #F3F6FC 72%);
+  background-size: 240% 100%;
+  animation: shine 1.9s linear infinite;
+  color: #96A8C8;
+  font-size: 0.78rem;
+}
+
+@keyframes shine {
+  from { background-position: 130% 0; }
+  to   { background-position: -30% 0; }
+}
+
+.reader__fallback { width: 100%; }
+
+.reader__fallback iframe {
+  display: block;
+  width: 100%;
+  height: min(82vh, 980px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #0A0F1E;
+}
+
+.reader__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.8;
+  color: var(--text-dim);
+}
+
+.field__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+
+/* 「从 Study 里挑一个」弹窗里的条目是可点的 */
+#studyPickerList .filelist__item { cursor: pointer; }
+
+@media (max-width: 720px) {
+  .music-hint { bottom: calc(clamp(16px, 3vw, 34px) + 58px); }
+  .reader__bar { top: 76px; padding: 10px; }
+  .reader__group--pen { margin-left: 0; border-right: none; padding-right: 0; }
+  .reader__group { border-right: none; padding-right: 0; }
+  .reader__fallback iframe { height: 70vh; }
 }
