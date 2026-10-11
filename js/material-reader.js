@@ -29,6 +29,11 @@
   var ANNOTATION_DIR = 'Study/annotations/';
   var PENS = ['#FF2E63', '#FF9F1C', '#32D583', '#4D9DFF', '#A06BFF', '#1F2937'];
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  /* 一张画布最多留多少像素：20 页 A4 在高分屏下如果全都按 2 倍存，
+     总共上亿像素，浏览器会把画布丢掉（页面就白了），所以按页压住上限 */
+  var MAX_PAGE_PIXELS = 4.5e6;
+  /* 同时最多保留几张"已渲染"的页面；离得远的先腾出来，滚回去再画 */
+  var MAX_LIVE_PAGES = 6;
 
   var state = {
     doc: null,
@@ -40,7 +45,9 @@
     color: PENS[0],
     size: 3,
     dirty: false,
-    current: 1
+    current: 1,
+    /* 每次重新排版（缩放 / 改窗口）都 +1，用来丢弃"上一版布局"里还在跑的渲染 */
+    gen: 0
   };
 
   /* ---------------------------------------------------------------------
@@ -261,12 +268,12 @@
       : '';
 
     bar.innerHTML =
-      '<div class="reader__group">' +
+      '<div class="reader__group reader__group--zoom">' +
         '<button class="toolbtn" type="button" data-zoom="out" title="缩小">−</button>' +
         '<span class="reader__zoom" id="zoomLabel">100%</span>' +
         '<button class="toolbtn" type="button" data-zoom="in" title="放大">＋</button>' +
-        '<button class="toolbtn" type="button" data-zoom="fit">适合宽度</button>' +
       '</div>' +
+      '<button class="toolbtn reader__wide" type="button" data-zoom="fit">适合宽度</button>' +
       '<span class="reader__page" id="pageIndicator">– / –</span>' +
       penTools;
   }
@@ -333,7 +340,9 @@
         ink: ink,
         skeleton: skeleton,
         drawn: false,
-        busy: false
+        busy: false,
+        task: null,
+        failed: 0
       };
     });
     layoutPages();
@@ -344,18 +353,32 @@
     canvas.height = Math.max(1, Math.round(height));
   }
 
+  /* 这一页该用多大的像素密度画：CSS 尺寸太大时按上限压回来 */
+  function pageDpr(p) {
+    var cssPixels = Math.max(1, p.w * state.scale) * Math.max(1, p.h * state.scale);
+    var allowed = Math.sqrt(MAX_PAGE_PIXELS / cssPixels);
+    return Math.max(0.6, Math.min(dpr, allowed));
+  }
+
   function layoutPages() {
+    state.gen++;
     state.pages.forEach(function (p) {
+      if (p.task) {
+        try { p.task.cancel(); } catch (err) { /* 忽略 */ }
+        p.task = null;
+      }
+      p.busy = false;
       var cssW = Math.max(40, Math.round(p.w * state.scale));
       var cssH = Math.max(40, Math.round(p.h * state.scale));
       p.cssW = cssW;
       p.cssH = cssH;
       p.wrap.style.width = cssW + 'px';
       p.wrap.style.height = cssH + 'px';
-      sizeCanvas(p.canvas, cssW * dpr, cssH * dpr);
-      sizeCanvas(p.ink, cssW * dpr, cssH * dpr);
+      var scaleToPixels = pageDpr(p);
+      sizeCanvas(p.canvas, cssW * scaleToPixels, cssH * scaleToPixels);
+      sizeCanvas(p.ink, cssW * scaleToPixels, cssH * scaleToPixels);
       p.drawn = false;
-      p.busy = false;
+      if (p.skeleton) p.skeleton.hidden = false;
     });
     var label = document.getElementById('zoomLabel');
     if (label) label.textContent = Math.round(state.scale * 100) + '%';
@@ -366,25 +389,75 @@
   function renderPage(p) {
     if (p.drawn || p.busy || !state.doc) return;
     p.busy = true;
+    var gen = state.gen;
+    var scale = state.scale;
+    var scaleToPixels = pageDpr(p);
     state.doc.getPage(p.n).then(function (page) {
-      var viewport = page.getViewport({ scale: state.scale });
-      sizeCanvas(p.canvas, viewport.width * dpr, viewport.height * dpr);
-      sizeCanvas(p.ink, viewport.width * dpr, viewport.height * dpr);
+      if (gen !== state.gen) return null;      /* 布局已经变了，这次结果作废 */
+      var viewport = page.getViewport({ scale: scale });
+      sizeCanvas(p.canvas, viewport.width * scaleToPixels, viewport.height * scaleToPixels);
+      sizeCanvas(p.ink, viewport.width * scaleToPixels, viewport.height * scaleToPixels);
       var ctx = p.canvas.getContext('2d');
-      return page.render({
+      var task = page.render({
         canvasContext: ctx,
         viewport: viewport,
-        transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null
-      }).promise;
+        transform: scaleToPixels !== 1 ? [scaleToPixels, 0, 0, scaleToPixels, 0, 0] : null
+      });
+      p.task = task;
+      return task.promise;
     }).then(function () {
+      p.task = null;
+      if (gen !== state.gen || p.drawn) {
+        p.busy = false;                        /* 有更新的一次排版接手了 */
+        return;
+      }
       p.busy = false;
       p.drawn = true;
-      if (p.skeleton && p.skeleton.parentNode) p.skeleton.parentNode.removeChild(p.skeleton);
-      p.skeleton = null;
+      p.failed = 0;
+      if (p.skeleton) p.skeleton.hidden = true;
       drawPageInk(p);
+      evictFarPages();
     }).catch(function () {
+      p.task = null;
       p.busy = false;
+      p.failed++;
+      if (p.failed === 3 && p.skeleton) p.skeleton.textContent = '第 ' + p.n + ' 页（重试中…）';
     });
+  }
+
+  /* 只保留离视口最近的几张已渲染页面，其余把画布腾空——否则页面一多，
+     浏览器会把画布丢掉，滚回去就变成白页 */
+  function evictFarPages() {
+    var live = state.pages.filter(function (p) { return p.drawn; });
+    var top = window.scrollY;
+    var bottom = top + window.innerHeight;
+    /* 缩得很小时一屏可能有好几页，那"保留几张"就得跟着涨，
+       否则会被反复腾掉又重画（闪个不停） */
+    var onScreen = 0;
+    state.pages.forEach(function (p) {
+      var rect = p.wrap.getBoundingClientRect();
+      if (rect.bottom > 0 && rect.top < window.innerHeight) onScreen++;
+    });
+    var keep = Math.max(MAX_LIVE_PAGES, onScreen + 2);
+    if (live.length <= keep) return;
+    live.sort(function (a, b) { return distanceToView(a, top, bottom) - distanceToView(b, top, bottom); });
+    live.slice(keep).forEach(function (p) {
+      p.canvas.width = 1;
+      p.canvas.height = 1;
+      p.ink.width = 1;
+      p.ink.height = 1;
+      p.drawn = false;
+      if (p.skeleton) p.skeleton.hidden = false;
+    });
+  }
+
+  function distanceToView(p, top, bottom) {
+    var rect = p.wrap.getBoundingClientRect();
+    var pageTop = rect.top + window.scrollY;
+    var pageBottom = pageTop + rect.height;
+    if (pageBottom < top) return top - pageBottom;
+    if (pageTop > bottom) return pageTop - bottom;
+    return 0;
   }
 
   function renderVisible() {
@@ -672,6 +745,7 @@
       scrollTick = false;
       renderVisible();
       updateIndicator();
+      evictFarPages();
     });
   }
 
